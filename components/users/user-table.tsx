@@ -390,27 +390,27 @@ export function UserTable() {
       {sortedUsers.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">Show</span>
+            <span className="text-sm text-black">Show</span>
             <Select
               value={itemsPerPage.toString()}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value))
                 setCurrentPage(1)
               }}
-              className="w-20 bg-slate-800/50 border-slate-700 text-white"
+              className="w-20 border-slate-700 text-black"
             >
+              <option value="5">5</option>
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
               <option value="100">100</option>
             </Select>
-            <span className="text-sm text-slate-600">entries</span>
+            <span className="text-sm text-black">Entries</span>
           </div>
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-600">
               Showing {startIndex} to {endIndex} of {sortedUsers.length}{" "}
-              entries
             </span>
             <div className="flex gap-2">
               <Button

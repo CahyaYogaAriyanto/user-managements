@@ -20,6 +20,30 @@ export const profileUpdateSchema = z.object({
   email: z.string().email("Invalid email format").min(1, "Email is required"),
   avatar: z.string().optional(),
   currentPassword: z.string().optional(),
-  newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
-})
+  newPassword: z.string().optional(),
+}).refine(
+  (data) => {
+    // If newPassword is provided, currentPassword must also be provided
+    if (data.newPassword && data.newPassword.length > 0) {
+      return data.currentPassword && data.currentPassword.length > 0
+    }
+    return true
+  },
+  {
+    message: "Current password is required to set a new password",
+    path: ["currentPassword"],
+  }
+).refine(
+  (data) => {
+    // If newPassword is provided, it must be at least 6 characters
+    if (data.newPassword && data.newPassword.length > 0) {
+      return data.newPassword.length >= 6
+    }
+    return true
+  },
+  {
+    message: "New password must be at least 6 characters",
+    path: ["newPassword"],
+  }
+)
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>

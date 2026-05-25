@@ -6,14 +6,15 @@ import { useUserStore } from "./user-store"
 interface AuthStore extends AuthSession {
   login: (email: string, password: string) => boolean
   logout: () => void
-  updateProfile: (data: { name: string; email: string; avatar?: string }) => void
+  updateProfile: (data: { name: string; email: string; avatar?: string; password?: string }) => void
+  verifyPassword: (password: string) => boolean
   isHydrated: boolean
   setHydrated: () => void
 }
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       isAuthenticated: false,
       user: null,
       isHydrated: false,
@@ -62,10 +63,44 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
         })
       },
+      verifyPassword: (password: string) => {
+        const currentUser = get().user
+        
+        if (!currentUser) return false
+        
+        // Check admin account
+        if (currentUser.id === "admin-1") {
+          return password === "admin123"
+        }
+        
+        // Check user in user store
+        const userStore = useUserStore.getState()
+        const foundUser = userStore.users.find(u => u.id === currentUser.id)
+        
+        return foundUser ? foundUser.password === password : false
+      },
       updateProfile: (data) => {
+        const currentUser = get().user
+        
         set((state) => ({
-          user: state.user ? { ...state.user, ...data } : null,
+          user: state.user ? { ...state.user, name: data.name, email: data.email, avatar: data.avatar } : null,
         }))
+        
+        // Update user in user store if exists
+        const userStore = useUserStore.getState()
+        if (currentUser && currentUser.id !== "admin-1") {
+          const userInStore = userStore.users.find(u => u.id === currentUser.id)
+          if (userInStore) {
+            userStore.updateUser(currentUser.id, {
+              name: data.name,
+              email: data.email,
+              avatar: data.avatar,
+              password: data.password || userInStore.password,
+              role: userInStore.role,
+              status: userInStore.status,
+            })
+          }
+        }
       },
     }),
     {

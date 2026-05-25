@@ -14,7 +14,7 @@ import { AvatarSelectorModal } from "@/components/users/avatar-selector-modal"
 import { User, Mail, Lock, Save } from "lucide-react"
 
 export default function ProfilePage() {
-  const { user, updateProfile } = useAuthStore()
+  const { user, updateProfile, verifyPassword } = useAuthStore()
   const addToast = useToastStore((state) => state.addToast)
   const [avatarSeed, setAvatarSeed] = useState(Date.now().toString())
   const [showAvatarSelector, setShowAvatarSelector] = useState(false)
@@ -47,13 +47,39 @@ export default function ProfilePage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      updateProfile({
-        name: data.name,
-        email: data.email,
-        avatar: data.avatar,
-      })
-
-      addToast("Profile updated successfully! ✨", "success")
+      // Check if user wants to change password
+      if (data.newPassword && data.newPassword.length > 0) {
+        // Verify current password
+        if (!data.currentPassword || data.currentPassword.length === 0) {
+          addToast("Current password is required to change password", "error")
+          return
+        }
+        
+        const isPasswordCorrect = verifyPassword(data.currentPassword)
+        if (!isPasswordCorrect) {
+          addToast("Current password is incorrect", "error")
+          return
+        }
+        
+        // Update profile with new password
+        updateProfile({
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar,
+          password: data.newPassword,
+        })
+        
+        addToast("Profile and password updated successfully! ✨", "success")
+      } else {
+        // Update profile without password change
+        updateProfile({
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar,
+        })
+        
+        addToast("Profile updated successfully! ✨", "success")
+      }
     } catch (error) {
       addToast("Failed to update profile", "error")
     }
@@ -167,7 +193,7 @@ export default function ProfilePage() {
                       type="password"
                       placeholder="Enter current password"
                       {...register("currentPassword")}
-                      className="h-12 pl-10"
+                      className={errors.currentPassword ? "border-red-500 h-12 pl-10" : "h-12 pl-10"}
                     />
                   </div>
                   {errors.currentPassword && (
